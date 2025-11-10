@@ -1,7 +1,4 @@
-ivan    15     6.00
-karl    15     6.80
-oian    16     3.90
-ran    18     8.00
-karl    15     6.00
-masha    56     0.98
-lifs    34     5.60
+ivan    17     8.00
+lydia    45     6.80
+robert    15     9.45
+karl     17     8.00

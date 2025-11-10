@@ -17,27 +17,39 @@ typedef struct {
     int age;
     float grade;
 } Student;
+
+/// @brief intro-function, gives a person choice, you can either create and load database or exit the program
+/// @param  
+/// @return choice
 int intro(void) {
     puts(YELLOW"Please enter your option"RESET);
-    puts(CYAN"1: Enter students to database"RESET);
+    puts(CYAN"1: Create a database"RESET);
     puts(CYAN"2: Load database"RESET);
-    puts(CYAN"3: Find a student by name"RESET);
-    puts(CYAN"4: Exit"RESET);
+    puts(CYAN"3: Exit"RESET);
     int res;
     scanf("%d", &res);
     while(getchar() != '\n');
-    if(res < 1 || res > 4) {
-        printf("Invalid input. Please try again");
+    if(res < 1 || res > 3) {
+        puts(RED"Invalid input. Please try again"RESET);
         return intro();
     }
     return res;
 }
+/// @brief checker if user's input is empty
+/// @param string 
+/// @return boolean
 bool is_empty(const char *string) {
     for(int i = 0; string[i]; i++) {
         if(!isspace(string[i])) return false;
     }
     return true;
 }
+/// @brief adds student to database (last index)
+/// @param arr 
+/// @param size 
+/// @param new_size 
+/// @param starting_index 
+/// @return new database
 Student** input_students(Student **arr, int size, int*new_size, int starting_index) {
     unsigned int count = 0;
     for(int i = starting_index; i < size; i++) {
@@ -51,11 +63,14 @@ Student** input_students(Student **arr, int size, int*new_size, int starting_ind
         printf("Enter a name, age and grade of student (empty space to exit): ");
         fgets(input, sizeof(input), stdin);
         if(is_empty(input)) break;
-        char name[100];
+        char name[256];
         int age = -1;
         float grade = -1;
-        sscanf(input, "%s %d %f", name, &age, &grade);
+        sscanf(input, " %99[^0-9] %d %f", name, &age, &grade);
         while((is_empty(name) || age == -1 || grade == -1) && !is_empty(input)) {
+            puts(name);
+            printf("%d", age);
+            printf("%.2f", grade);
             puts("Invalid input. Try again");
             printf("Enter a name, age and grade of student (empty space to exit): ");
             fgets(input, sizeof(input), stdin);
@@ -73,21 +88,29 @@ Student** input_students(Student **arr, int size, int*new_size, int starting_ind
     *new_size = starting_index + count;
     return count == 0 ? NULL : arr;
 }
+/// @brief prints students with colour styles
+/// @param arr 
+/// @param size 
 void print_students(Student **arr, const int size) {
-    printf(BOLD_BLUE"NAME"RESET);
-    printf(BOLD_BLUE"    AGE"RESET);
-    printf(BOLD_BLUE"    GRADE\n"RESET);
-    printf(BOLD_GREEN"--------------------\n"RESET);
+    printf(BOLD_BLUE"%-20s %-5s %-7s\n", "NAME","AGE","GRADE"RESET);
+    printf(BOLD_GREEN"-------------------------------------\n"RESET);
     for(int i = 0; i < size; i++) {
-        printf("%s %5d %8.2f\n", arr[i]->name, arr[i]->age, arr[i]->grade);
+        printf("%-20s %-5d %-7.2f\n",arr[i]->name,arr[i]->age, arr[i]->grade);
     }
+    puts("");
 }
+/// @brief frees memory after malloc
+/// @param arr 
+/// @param size 
 void free_students(Student **arr, const int size) {
     for(int i = 0; i < size; i++) {
         free(arr[i]);
     }
     free(arr);
 }
+/// @brief choice for sorting
+/// @param  
+/// @return choice
 int sorting_res(void) {
 int res;
     printf("On which parameter do you want to sort students ?\n");
@@ -103,6 +126,9 @@ int res;
     }
     return res;
 }
+/// @brief asks user, if user wants to save a database in file
+/// @param  
+/// @return boolean
 bool save_to_file(void) {
     char res;
     puts(BOLD_GREEN"Do you want to save result to text file? (y/n)"RESET);
@@ -114,9 +140,12 @@ bool save_to_file(void) {
     }
     return res == 'y' ? 1 : 0;
 }
+/// @brief saves database to file, Students.txt by default
+/// @param arr 
+/// @param size 
 void SAVE_TO_FILE(Student **arr, const int size) {
     if(save_to_file()) {
-        const char *filename = "Students.txt";
+        const char *filename = "Students.txt"; //By default it's Students.txt, but you're lexible to change it.
     FILE* file = fopen(filename, "w");
     if(!file) {
         fprintf(stderr,RED"Error opening a file"RESET);
@@ -125,11 +154,14 @@ void SAVE_TO_FILE(Student **arr, const int size) {
     for(int i = 0; i < size; i++) {
     fprintf(file,"%s %5d %8.2f\n", arr[i]->name, arr[i]->age, arr[i]->grade); 
     }
-    puts(BOLD_BLUE"Data was successfully saved into Students.txt file."RESET);
+    printf(BOLD_BLUE"Data was successfully saved into %s file.\n"RESET,filename);
     fclose(file);
     }
     else return;
 }
+/// @brief loads a database from file, Students.txt by default, if you want to change the name of file, please change it in LoadFromFile and SAVE_TO_FILE functions.
+/// @param new_size 
+/// @return database
 Student **LoadFromFile(int * new_size) {
     const char *filename = "Students.txt";
     int size = 3, count =0;
@@ -158,21 +190,28 @@ fclose(file);
 return arr;
 
 }
+/// @brief prints options after successful loading database from file
+/// @param  
+/// @return choice 
 int option_after_successful_loading_from_file(void) {
     puts(BLUE"Please enter your choice: ");
-    puts("1: Add students");
-    puts("2: Remove students");
+    puts("1: Add student");
+    puts("2: Remove student");
     puts("3: Sort database");
-    puts("4: Back"RESET);
+    puts("4: Find a student");
+    puts("5: Back"RESET);
     int res;
     scanf(" %d", &res);
     while(getchar() != '\n');
-    if(res < 1 || res > 4) {
+    if(res < 1 || res > 5) {
         puts(RED"Invalid choice.Please try again"RESET);
         return option_after_successful_loading_from_file();
     }
     return res;
 }
+/// @brief asks user what kind of order sorting should be
+/// @param  
+/// @return boolean
 bool ascending(void) {
     printf(BOLD_YELLOW"Do you want to sort items in ascending order or descending?\n"RESET);
     puts(BOLD_GREEN"1: Ascending");
@@ -189,6 +228,13 @@ bool ascending(void) {
         puts(RED"Invalid choice. Try agrain"RESET);
         return ascending();
 }
+/// @brief part of merge sort functions
+/// @param arr 
+/// @param left 
+/// @param mid 
+/// @param right 
+/// @param res 
+/// @param order 
 void merge(Student **arr, int left, int mid, int right, int res, bool order) {
 int leftSize = mid - left + 1;
 int rightSize = right - mid;
@@ -232,6 +278,12 @@ arr[k++] = leftPart[i++];
 free(leftPart);
 free(rightPart);
 } 
+/// @brief sorts aray by user params
+/// @param arr 
+/// @param left 
+/// @param right 
+/// @param res 
+/// @param order 
 void mergeSort(Student **arr, int left, int right, int res, bool order) {
     if(left >= right) return;
     int mid = left + (right - left) / 2;
@@ -239,6 +291,11 @@ void mergeSort(Student **arr, int left, int right, int res, bool order) {
     mergeSort(arr, mid + 1, right, res, order);
     merge(arr, left, mid, right,res, order);
 }
+/// @brief binary search(WORKS ONLY IN SORTED ASCENDING ARRAY BY NAME!!!)
+/// @param arr 
+/// @param size 
+/// @param target 
+/// @return student index
 int search(Student **arr, const int size, const char *target) {
     int left = 0;
     int right = size - 1;
@@ -251,6 +308,10 @@ int search(Student **arr, const int size, const char *target) {
     }
     return -1;
 }
+/// @brief removes student from database
+/// @param arr 
+/// @param size 
+/// @param index 
 void remove_student_from_database(Student **arr, int size, int index) {
     for(int i = index; i < size; i++) {
         Student ** temp = arr;
@@ -258,6 +319,84 @@ void remove_student_from_database(Student **arr, int size, int index) {
         arr[i+1] = temp[i];
     }
     size--;
+}
+int find_students_from_database(void) {
+    puts(BOLD_BLUE"On which criteria do you want to find students ?"RESET);
+    puts(CYAN"1: Name"RESET);
+    puts(CYAN"2: Age"RESET);
+    puts(CYAN"3: Grade"RESET);
+    puts(CYAN"4: Back"RESET);
+    int res;
+    scanf("%d", &res);
+    while(getchar() != '\n');
+    if(res < 1 || res > 4) {
+        puts(RED"Invalid input. Please try again"RESET);
+        return find_students_from_database();
+    }
+    return res;
+}
+void create_new_database_from_found_students(Student **arr, const int size) {
+    int res = find_students_from_database();
+        switch(res) {
+            case 1 : {
+                printf(BOLD_GREEN"Enter a student name you want to find: "RESET);
+            char target[256];
+            if(!fgets(target, sizeof target, stdin)) {
+                printf(RED"\nError reading student name.\n"RESET);
+                break;
+            }
+            target[strcspn(target, "\n")] = '\0';
+            int idx = search(arr, size, target);
+            if(idx == -1) {
+                puts(RED"Student was not found."RESET);
+                break;
+            }
+            printf("NAME %s\nAGE %d\nGRADE %.2f\n", arr[idx]->name, arr[idx]->age, arr[idx]->grade);
+            break;
+        }
+        case 2 : {
+            puts(BOLD_GREEN"Please enter student age: "RESET);
+            int age;
+            scanf("%d", &age);
+            while(getchar() != '\n');
+            Student ** new_array = malloc(size * sizeof(*new_array));
+            int idx = 0;
+            for(int i = 0; i < size; i++) {
+                if(arr[i]->age == age) {
+                    new_array[idx] = arr[i];
+                    idx++;
+                }
+            }
+            print_students(new_array, idx);
+            free(new_array);
+            break;
+        }
+        case 3 : {
+            puts(BOLD_GREEN"Please enter student grade: "RESET);
+            float grade;
+            scanf("%f", &grade);
+            while(getchar() != '\n');
+            Student ** new_array = malloc(size * sizeof(*new_array));
+            int idx = 0;
+            for(int i = 0; i < size; i++) {
+                if(arr[i]->grade == grade) {
+                    new_array[idx] = arr[i];
+                    idx++;
+                }
+            }
+            if(idx == 0) {
+                puts(RED"No students were found on this age"RESET);
+                free(new_array);
+                break;
+            }
+            print_students(new_array, idx);
+            free(new_array);
+            break;
+        }
+        case 4: 
+            break;
+        
+    }
 }
 int main() {
     puts(BLUE"Welcome to Students database!"RESET);
@@ -307,13 +446,13 @@ case 2: {
      puts(BOLD_GREEN"Enter a student that you want tor remove from database: "RESET);
      char input[500];
      if(!fgets(input, sizeof input, stdin)) {
-        printf(RED"Error reading student."RESET);
+        printf(RED"Error reading student name."RESET);
         break;
      }
      input[strcspn(input, "\n")] = '\0';
      int index = search(arr, size, input);
         if(index == -1) {
-        puts(RED"Student could not be found!"RESET);
+        puts(RED"Student was not be found!"RESET);
         break;
     }
      remove_student_from_database(arr, size, index);
@@ -332,7 +471,11 @@ case 2: {
     SAVE_TO_FILE(arr, size);
     break;
     }
-    case 4: {
+    case 4 : {
+        create_new_database_from_found_students(arr, size);
+        break;
+    }
+    case 5: {
         break;
     }
 }
@@ -340,8 +483,7 @@ case 2: {
     break;
     
 }
-
-case 4: {
+case 3: {
     puts(BOLD_YELLOW"Bye!"RESET);
     return 0;
 }
