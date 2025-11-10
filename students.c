@@ -47,6 +47,7 @@ Student** input_students(Student **arr, int size, int*new_size, int starting_ind
         fprintf(stderr, "Memory allocation failed!");
         exit(EXIT_FAILURE);
     }
+    
         printf("Enter a name, age and grade of student (empty space to exit): ");
         fgets(input, sizeof(input), stdin);
         if(is_empty(input)) break;
@@ -76,7 +77,7 @@ void print_students(Student **arr, const int size) {
     printf(BOLD_BLUE"NAME"RESET);
     printf(BOLD_BLUE"    AGE"RESET);
     printf(BOLD_BLUE"    GRADE\n"RESET);
-    printf(BOLD_GREEN"--------------------\n"BOLD_GREEN);
+    printf(BOLD_GREEN"--------------------\n"RESET);
     for(int i = 0; i < size; i++) {
         printf("%s %5d %8.2f\n", arr[i]->name, arr[i]->age, arr[i]->grade);
     }
@@ -97,18 +98,18 @@ int res;
     scanf("%d", &res);
     while(getchar() != '\n');
     if(res < 1 || res > 4) {
-        puts("Invalid choice, try again");
+        puts(RED"Invalid choice, try again"RESET);
         return sorting_res();
     }
     return res;
 }
 bool save_to_file(void) {
     char res;
-    puts("Do you want to save result to text file? (y/n)");
+    puts(BOLD_GREEN"Do you want to save result to text file? (y/n)"RESET);
     scanf(" %c", &res);
     while(getchar() != '\n');
     if(res != 'y' && res != 'n') {
-        puts("Invalid input. Try again");
+        puts(RED"Invalid input. Try again"RESET);
         return save_to_file();
     }
     return res == 'y' ? 1 : 0;
@@ -124,7 +125,7 @@ void SAVE_TO_FILE(Student **arr, const int size) {
     for(int i = 0; i < size; i++) {
     fprintf(file,"%s %5d %8.2f\n", arr[i]->name, arr[i]->age, arr[i]->grade); 
     }
-    puts("Data was successfully saved into Students.txt file.");
+    puts(BOLD_BLUE"Data was successfully saved into Students.txt file."RESET);
     fclose(file);
     }
     else return;
@@ -158,24 +159,24 @@ return arr;
 
 }
 int option_after_successful_loading_from_file(void) {
-    puts("Please enter your choice: ");
+    puts(BLUE"Please enter your choice: ");
     puts("1: Add students");
     puts("2: Remove students");
     puts("3: Sort database");
-    puts("4: Back");
+    puts("4: Back"RESET);
     int res;
     scanf(" %d", &res);
     while(getchar() != '\n');
-    if(res < 1 || res > 3) {
+    if(res < 1 || res > 4) {
         puts(RED"Invalid choice.Please try again"RESET);
         return option_after_successful_loading_from_file();
     }
     return res;
 }
 bool ascending(void) {
-    printf("Do you want to sort items in ascending order or descending?\n");
-    puts("1: Ascending");
-    puts("2: Descending");
+    printf(BOLD_YELLOW"Do you want to sort items in ascending order or descending?\n"RESET);
+    puts(BOLD_GREEN"1: Ascending");
+    puts("2: Descending"RESET);
     int dec;
     scanf("%d", &dec);
     while(getchar() != '\n');
@@ -185,7 +186,7 @@ bool ascending(void) {
         case 2:
         return false;
     }
-        puts("Invalid choice. Try agrain");
+        puts(RED"Invalid choice. Try agrain"RESET);
         return ascending();
 }
 void merge(Student **arr, int left, int mid, int right, int res, bool order) {
@@ -250,8 +251,7 @@ int search(Student **arr, const int size, const char *target) {
     }
     return -1;
 }
-void remove_student_from_database(Student **arr, int size, char *target) {
-    int index = search(arr, size, target);
+void remove_student_from_database(Student **arr, int size, int index) {
     for(int i = index; i < size; i++) {
         Student ** temp = arr;
         arr[i] = arr[i+1];
@@ -296,7 +296,6 @@ case 2: {
     case 1 : {
             int new_size = size + 5;
             arr = realloc(arr, new_size * sizeof(*arr));
-            while(getchar() != '\n');
             arr = input_students(arr, new_size,&new_size, size);
             print_students(arr, new_size);
             size = new_size;
@@ -305,14 +304,19 @@ case 2: {
         
     }   
     case 2 : {
-     puts("Enter a student that you want tor remove from database: ");
+     puts(BOLD_GREEN"Enter a student that you want tor remove from database: "RESET);
      char input[500];
      if(!fgets(input, sizeof input, stdin)) {
-        printf("Error reading student.");
+        printf(RED"Error reading student."RESET);
         break;
      }
      input[strcspn(input, "\n")] = '\0';
-     remove_student_from_database(arr, size, input);
+     int index = search(arr, size, input);
+        if(index == -1) {
+        puts(RED"Student could not be found!"RESET);
+        break;
+    }
+     remove_student_from_database(arr, size, index);
      size--;
      SAVE_TO_FILE(arr, size);
      print_students(arr, size);
