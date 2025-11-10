@@ -1,0 +1,347 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <ctype.h>
+#include <string.h>
+#define RESET       "\033[0m"
+#define RED         "\033[0;031m"
+#define GREEN       "\033[0;31m"
+#define YELLOW      "\033[0;33m"
+#define BLUE        "\033[0;34m"
+#define CYAN        "\033[0;36m"
+#define BOLD_GREEN  "\033[1;32m"
+#define BOLD_YELLOW "\033[1;33m"
+#define BOLD_BLUE   "\033[1;34m"
+typedef struct {
+    char name[50];
+    int age;
+    float grade;
+} Student;
+int intro(void) {
+    puts(YELLOW"Please enter your option"RESET);
+    puts(CYAN"1: Enter students to database"RESET);
+    puts(CYAN"2: Load database"RESET);
+    puts(CYAN"3: Find a student by name"RESET);
+    puts(CYAN"4: Exit"RESET);
+    int res;
+    scanf("%d", &res);
+    while(getchar() != '\n');
+    if(res < 1 || res > 4) {
+        printf("Invalid input. Please try again");
+        return intro();
+    }
+    return res;
+}
+bool is_empty(const char *string) {
+    for(int i = 0; string[i]; i++) {
+        if(!isspace(string[i])) return false;
+    }
+    return true;
+}
+Student** input_students(Student **arr, int size, int*new_size, int starting_index) {
+    unsigned int count = 0;
+    for(int i = starting_index; i < size; i++) {
+        char input[500];
+        arr[i] = malloc(sizeof(Student));
+        if(!arr[i]) {
+        fprintf(stderr, "Memory allocation failed!");
+        exit(EXIT_FAILURE);
+    }
+        printf("Enter a name, age and grade of student (empty space to exit): ");
+        fgets(input, sizeof(input), stdin);
+        if(is_empty(input)) break;
+        char name[100];
+        int age = -1;
+        float grade = -1;
+        sscanf(input, "%s %d %f", name, &age, &grade);
+        while((is_empty(name) || age == -1 || grade == -1) && !is_empty(input)) {
+            puts("Invalid input. Try again");
+            printf("Enter a name, age and grade of student (empty space to exit): ");
+            fgets(input, sizeof(input), stdin);
+             sscanf(input, "%s %d %f", name, &age, &grade);
+        }
+        if(is_empty(input)) break;
+        strcpy(arr[i]->name, name);
+        arr[i]->age = age;
+        arr[i]->grade = grade;
+        count++;
+        if(count == size) {
+            arr = realloc(arr, (size+= 2) * sizeof(*arr));
+        }
+    }
+    *new_size = starting_index + count;
+    return count == 0 ? NULL : arr;
+}
+void print_students(Student **arr, const int size) {
+    printf(BOLD_BLUE"NAME"RESET);
+    printf(BOLD_BLUE"    AGE"RESET);
+    printf(BOLD_BLUE"    GRADE\n"RESET);
+    printf(BOLD_GREEN"--------------------\n"BOLD_GREEN);
+    for(int i = 0; i < size; i++) {
+        printf("%s %5d %8.2f\n", arr[i]->name, arr[i]->age, arr[i]->grade);
+    }
+}
+void free_students(Student **arr, const int size) {
+    for(int i = 0; i < size; i++) {
+        free(arr[i]);
+    }
+    free(arr);
+}
+int sorting_res(void) {
+int res;
+    printf("On which parameter do you want to sort students ?\n");
+    puts("1: By grade");
+    puts("2: By age");
+    puts("3: By name (alphabetical)");
+    puts("4: Do not sort");
+    scanf("%d", &res);
+    while(getchar() != '\n');
+    if(res < 1 || res > 4) {
+        puts("Invalid choice, try again");
+        return sorting_res();
+    }
+    return res;
+}
+bool save_to_file(void) {
+    char res;
+    puts("Do you want to save result to text file? (y/n)");
+    scanf(" %c", &res);
+    while(getchar() != '\n');
+    if(res != 'y' && res != 'n') {
+        puts("Invalid input. Try again");
+        return save_to_file();
+    }
+    return res == 'y' ? 1 : 0;
+}
+void SAVE_TO_FILE(Student **arr, const int size) {
+    if(save_to_file()) {
+        const char *filename = "Students.txt";
+    FILE* file = fopen(filename, "w");
+    if(!file) {
+        fprintf(stderr,RED"Error opening a file"RESET);
+        return;
+    }
+    for(int i = 0; i < size; i++) {
+    fprintf(file,"%s %5d %8.2f\n", arr[i]->name, arr[i]->age, arr[i]->grade); 
+    }
+    puts("Data was successfully saved into Students.txt file.");
+    fclose(file);
+    }
+    else return;
+}
+Student **LoadFromFile(int * new_size) {
+    const char *filename = "Students.txt";
+    int size = 3, count =0;
+    Student **arr = malloc(size * sizeof(*arr));
+    FILE *file = fopen(filename, "r");
+    if(!file) {
+        fprintf(stderr, RED"Error opening a file\n"RESET);
+        exit(EXIT_FAILURE);
+    }
+    char buf[500];
+    while(fgets(buf, sizeof buf, file)) {
+        arr[count] = malloc(sizeof (Student));
+    if(sscanf(buf, "%s %d %f", arr[count]->name, &arr[count]->age, &arr[count]->grade) != 3) {
+        fprintf(stderr, RED"Invalid line formal in file!"RESET);
+        free(arr[count]);
+        continue;
+    }
+    count++;
+    if(count == size) {
+        arr = realloc(arr, (size+=2) * sizeof(*arr));
+    }
+
+}
+*new_size = count;
+fclose(file);
+return arr;
+
+}
+int option_after_successful_loading_from_file(void) {
+    puts("Please enter your choice: ");
+    puts("1: Add students");
+    puts("2: Remove students");
+    puts("3: Sort database");
+    puts("4: Back");
+    int res;
+    scanf(" %d", &res);
+    while(getchar() != '\n');
+    if(res < 1 || res > 3) {
+        puts(RED"Invalid choice.Please try again"RESET);
+        return option_after_successful_loading_from_file();
+    }
+    return res;
+}
+bool ascending(void) {
+    printf("Do you want to sort items in ascending order or descending?\n");
+    puts("1: Ascending");
+    puts("2: Descending");
+    int dec;
+    scanf("%d", &dec);
+    while(getchar() != '\n');
+    switch(dec) {
+        case 1:
+        return true;
+        case 2:
+        return false;
+    }
+        puts("Invalid choice. Try agrain");
+        return ascending();
+}
+void merge(Student **arr, int left, int mid, int right, int res, bool order) {
+int leftSize = mid - left + 1;
+int rightSize = right - mid;
+Student **leftPart = malloc(leftSize * sizeof(Student*));
+Student **rightPart = malloc(rightSize * sizeof(Student*));
+for(int i = 0; i < leftSize; i++) {
+    leftPart[i] = arr[i+left];
+}
+for(int i = 0; i < rightSize; i++) {
+    rightPart[i] = arr[mid + i + 1];
+}
+int i = 0, j = 0, k = left;
+while(i < leftSize && j < rightSize) {
+    bool cmp = 0;
+    if(res == 1) {
+    cmp = order ? leftPart[i]->grade < rightPart[j]->grade : leftPart[i]->grade > rightPart[j]->grade;
+        
+}
+else if(res == 2) {
+    cmp = order ? leftPart[i]->age < rightPart[j]->age : leftPart[i]->age > rightPart[j]->age;
+}
+else {
+    cmp = order ? strcmp(leftPart[i]->name, rightPart[j]->name) < 0 : strcmp(leftPart[i]->name, rightPart[j]->name) > 0;
+}
+
+if(cmp) {
+arr[k++] = leftPart[i++];
+    }   
+    else {
+        arr[k++] = rightPart[j++];
+    }
+}
+
+    while(i < leftSize) {
+        arr[k++] = leftPart[i++];
+    }
+    while(j < rightSize) {
+        arr[k++] = rightPart[j++];
+    }
+
+free(leftPart);
+free(rightPart);
+} 
+void mergeSort(Student **arr, int left, int right, int res, bool order) {
+    if(left >= right) return;
+    int mid = left + (right - left) / 2;
+    mergeSort(arr, left, mid, res, order);
+    mergeSort(arr, mid + 1, right, res, order);
+    merge(arr, left, mid, right,res, order);
+}
+int search(Student **arr, const int size, const char *target) {
+    int left = 0;
+    int right = size - 1;
+    while(left<=right) {
+        int mid = left + (right-left) / 2;
+        int res = strcmp((arr[mid]->name), target);
+        if(res == 0) return mid;
+        else if(res < 0) left = mid + 1;
+        else right = mid - 1;
+    }
+    return -1;
+}
+void remove_student_from_database(Student **arr, int size, char *target) {
+    int index = search(arr, size, target);
+    for(int i = index; i < size; i++) {
+        Student ** temp = arr;
+        arr[i] = arr[i+1];
+        arr[i+1] = temp[i];
+    }
+    size--;
+}
+int main() {
+    puts(BLUE"Welcome to Students database!"RESET);
+    for(;;) {
+        int res = intro();
+        switch(res) {
+            case 1: {
+    int size = 3;
+    Student **arr = malloc(size * sizeof(*arr));
+    if(!arr) {
+        fprintf(stderr, RED"Memory allocation failed!"RESET);
+        exit(EXIT_FAILURE);
+    }
+    arr = input_students(arr, size, &size, 0);
+    if(!arr) {
+        puts(RED"You did not enter any students!"RESET);
+        free_students(arr, 0);
+        break;
+    }
+    int res = sorting_res();
+    if(res != 4) {
+        bool order = ascending();
+    mergeSort(arr, 0, size-1, res, order);
+    }
+    print_students(arr, size);
+    SAVE_TO_FILE(arr, size);
+    break;
+
+}
+case 2: {
+    int size = 0;
+    Student **arr = LoadFromFile(&size);    
+    print_students(arr, size);
+    int res = option_after_successful_loading_from_file();
+   switch(res) {
+    case 1 : {
+            int new_size = size + 5;
+            arr = realloc(arr, new_size * sizeof(*arr));
+            while(getchar() != '\n');
+            arr = input_students(arr, new_size,&new_size, size);
+            print_students(arr, new_size);
+            size = new_size;
+            SAVE_TO_FILE(arr, size);
+            break;
+        
+    }   
+    case 2 : {
+     puts("Enter a student that you want tor remove from database: ");
+     char input[500];
+     if(!fgets(input, sizeof input, stdin)) {
+        printf("Error reading student.");
+        break;
+     }
+     input[strcspn(input, "\n")] = '\0';
+     remove_student_from_database(arr, size, input);
+     size--;
+     SAVE_TO_FILE(arr, size);
+     print_students(arr, size);
+     break;
+    }
+    case 3 : {
+        int res = sorting_res();
+    if(res != 4) {
+        bool order = ascending();
+    mergeSort(arr, 0, size-1, res, order);
+    }
+    print_students(arr, size);
+    SAVE_TO_FILE(arr, size);
+    break;
+    }
+    case 4: {
+        break;
+    }
+}
+    free_students(arr, size);
+    break;
+    
+}
+
+case 4: {
+    puts(BOLD_YELLOW"Bye!"RESET);
+    return 0;
+}
+        }
+    }
+    return 0;
+}
