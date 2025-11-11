@@ -67,6 +67,7 @@ Student** input_students(Student **arr, int size, int*new_size, int starting_ind
         int age = -1;
         float grade = -1;
         sscanf(input, " %99[^0-9] %d %f", name, &age, &grade);
+        name[strcspn(name, "\n")] = '\0';
         while((is_empty(name) || age == -1 || grade == -1) && !is_empty(input)) {
             puts(name);
             printf("%d", age);
@@ -145,7 +146,7 @@ bool save_to_file(void) {
 /// @param size 
 void SAVE_TO_FILE(Student **arr, const int size) {
     if(save_to_file()) {
-        const char *filename = "Students.txt"; //By default it's Students.txt, but you're lexible to change it.
+        const char *filename = "Students.txt"; // By default it's Students.txt, but you're lexible to change it.
     FILE* file = fopen(filename, "w");
     if(!file) {
         fprintf(stderr,RED"Error opening a file"RESET);
@@ -174,11 +175,13 @@ Student **LoadFromFile(int * new_size) {
     char buf[500];
     while(fgets(buf, sizeof buf, file)) {
         arr[count] = malloc(sizeof (Student));
-    if(sscanf(buf, "%s %d %f", arr[count]->name, &arr[count]->age, &arr[count]->grade) != 3) {
+    if(sscanf(buf, "%99[^0-9] %d %f", arr[count]->name, &arr[count]->age, &arr[count]->grade) != 3) {
         fprintf(stderr, RED"Invalid line formal in file!"RESET);
         free(arr[count]);
         continue;
     }
+    arr[count]->name[strcspn(arr[count]->name, "\n")] = '\0';
+    while(isspace(arr[count]->name[strlen(arr[count]->name)-1])) arr[count]->name[strlen(arr[count]->name) - 1] ='\0';
     count++;
     if(count == size) {
         arr = realloc(arr, (size+=2) * sizeof(*arr));
@@ -291,21 +294,42 @@ void mergeSort(Student **arr, int left, int right, int res, bool order) {
     mergeSort(arr, mid + 1, right, res, order);
     merge(arr, left, mid, right,res, order);
 }
+char *toLowerString(char *string, size_t size) {
+    char *lowered_array = malloc((size + 1) * sizeof(char));
+    int idx = 0;
+    for(int i =0; string[i]; i++) {
+        lowered_array[idx] = tolower(string[i]);
+        idx++;
+    }
+    lowered_array[idx] ='\0';
+    return lowered_array;
+}
 /// @brief binary search(WORKS ONLY IN SORTED ASCENDING ARRAY BY NAME!!!)
 /// @param arr 
 /// @param size 
 /// @param target 
 /// @return student index
-int search(Student **arr, const int size, const char *target) {
+int search(Student **arr, const int size,char *target) {
     int left = 0;
     int right = size - 1;
+    target[strcspn(target, "\n")] ='\0';
+    while(isspace(target[strlen(target) - 1])) target[strlen(target) - 1] ='\0';
+    char *temp1  = toLowerString(target, strlen(target));
     while(left<=right) {
         int mid = left + (right-left) / 2;
-        int res = strcmp((arr[mid]->name), target);
-        if(res == 0) return mid;
-        else if(res < 0) left = mid + 1;
+        char *temp2  = toLowerString(arr[mid]->name, strlen(arr[mid]->name));
+        int res = strcmp(temp1, temp2);
+        if(res == 0) {
+            free(temp1);
+            free(temp2);
+            return mid;
+        }
+        else if(res > 0) left = mid + 1;
         else right = mid - 1;
+        free(temp2);
     }
+    free(temp1);
+    
     return -1;
 }
 /// @brief removes student from database
