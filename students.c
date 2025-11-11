@@ -176,7 +176,7 @@ Student **LoadFromFile(int * new_size) {
     while(fgets(buf, sizeof buf, file)) {
         arr[count] = malloc(sizeof (Student));
     if(sscanf(buf, "%99[^0-9] %d %f", arr[count]->name, &arr[count]->age, &arr[count]->grade) != 3) {
-        fprintf(stderr, RED"Invalid line formal in file!"RESET);
+        fprintf(stderr, RED"Invalid line format in file!\n"RESET);
         free(arr[count]);
         continue;
     }
@@ -332,6 +332,23 @@ int search(Student **arr, const int size,char *target) {
     
     return -1;
 }
+/// @brief checks if database is sorted by name in ascending order
+/// @param arr 
+/// @param size 
+/// @return result of checking
+bool is_sorted_by_name_ascending(Student **arr,const int size) {
+    for(int i = 0; i < size; i++) {
+        if(strcmp(arr[i]->name, arr[i+1]->name) > 0) return false;
+    }
+    return true;
+}
+int linear_search(Student **arr, const int size, const char *target) {
+    int i = 0;
+    for(; i < size; i++) {
+        if(strcmp(arr[i]->name, target) == 0) return i;
+    }
+    return -1;
+}
 /// @brief removes student from database
 /// @param arr 
 /// @param size 
@@ -344,6 +361,9 @@ void remove_student_from_database(Student **arr, int size, int index) {
     }
     size--;
 }
+/// @brief asks user about criteria of finding students
+/// @param  
+/// @return user's choice
 int find_students_from_database(void) {
     puts(BOLD_BLUE"On which criteria do you want to find students ?"RESET);
     puts(CYAN"1: Name"RESET);
@@ -359,7 +379,11 @@ int find_students_from_database(void) {
     }
     return res;
 }
-void create_new_database_from_found_students(Student **arr, const int size) {
+/// @brief creates a new database in case choice was not 1. Additionally, if database is sorted by name in ascending order searching will be O(log n), otherwise O(n).
+/// @param arr 
+/// @param size 
+/// @param sorted 
+void create_new_database_from_found_students(Student **arr, const int size, bool sorted) {
     int res = find_students_from_database();
         switch(res) {
             case 1 : {
@@ -370,7 +394,11 @@ void create_new_database_from_found_students(Student **arr, const int size) {
                 break;
             }
             target[strcspn(target, "\n")] = '\0';
-            int idx = search(arr, size, target);
+            int idx;
+            if(sorted){
+                 idx = search(arr, size, target);
+                 }
+           else idx =  linear_search(arr, size, target);
             if(idx == -1) {
                 puts(RED"Student was not found."RESET);
                 break;
@@ -453,6 +481,7 @@ int main() {
 case 2: {
     int size = 0;
     Student **arr = LoadFromFile(&size);    
+    if(size == 0 ) break;
     print_students(arr, size);
     int res = option_after_successful_loading_from_file();
    switch(res) {
@@ -474,7 +503,13 @@ case 2: {
         break;
      }
      input[strcspn(input, "\n")] = '\0';
-     int index = search(arr, size, input);
+     int index;
+     if(is_sorted_by_name_ascending(arr, size)) {
+     index = search(arr, size, input);
+     }
+     else {
+        index = linear_search(arr, size, input);
+     }
         if(index == -1) {
         puts(RED"Student was not be found!"RESET);
         break;
@@ -496,7 +531,7 @@ case 2: {
     break;
     }
     case 4 : {
-        create_new_database_from_found_students(arr, size);
+        create_new_database_from_found_students(arr, size, is_sorted_by_name_ascending(arr, size));
         break;
     }
     case 5: {
