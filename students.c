@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
+const char *FILENAME = "Students.txt";  
 #define RESET       "\033[0m"
 #define RED         "\033[0;031m"
 #define GREEN       "\033[0;31m"
@@ -17,7 +18,6 @@ typedef struct {
     int age;
     float grade;
 } Student;
-
 /// @brief intro-function, gives a person choice, you can either create and load database or exit the program
 /// @param  
 /// @return choice
@@ -146,8 +146,7 @@ bool save_to_file(void) {
 /// @param size 
 void SAVE_TO_FILE(Student **arr, const int size) {
     if(save_to_file()) {
-        const char *filename = "Students.txt"; // By default it's Students.txt, but you're lexible to change it.
-    FILE* file = fopen(filename, "w");
+    FILE* file = fopen(FILENAME, "w");
     if(!file) {
         fprintf(stderr,RED"Error opening a file"RESET);
         return;
@@ -155,19 +154,18 @@ void SAVE_TO_FILE(Student **arr, const int size) {
     for(int i = 0; i < size; i++) {
     fprintf(file,"%s %5d %8.2f\n", arr[i]->name, arr[i]->age, arr[i]->grade); 
     }
-    printf(BOLD_BLUE"Data was successfully saved into %s file.\n"RESET,filename);
+    printf(BOLD_BLUE"Data was successfully saved into %s file.\n"RESET,FILENAME);
     fclose(file);
     }
     else return;
 }
-/// @brief loads a database from file, Students.txt by default, if you want to change the name of file, please change it in LoadFromFile and SAVE_TO_FILE functions.
+/// @brief loads a database from file, Students.txt by default
 /// @param new_size 
 /// @return database
 Student **LoadFromFile(int * new_size) {
-    const char *filename = "Students.txt";
     int size = 3, count =0;
     Student **arr = malloc(size * sizeof(*arr));
-    FILE *file = fopen(filename, "r");
+    FILE *file = fopen(FILENAME, "r");
     if(!file) {
         fprintf(stderr, RED"Error opening a file\n"RESET);
         exit(EXIT_FAILURE);
@@ -202,11 +200,12 @@ int option_after_successful_loading_from_file(void) {
     puts("2: Remove student");
     puts("3: Sort database");
     puts("4: Find a student");
-    puts("5: Back"RESET);
+    puts("5: Editing database");
+    puts("6: Back"RESET);
     int res;
     scanf(" %d", &res);
     while(getchar() != '\n');
-    if(res < 1 || res > 5) {
+    if(res < 1 || res > 6) {
         puts(RED"Invalid choice.Please try again"RESET);
         return option_after_successful_loading_from_file();
     }
@@ -359,6 +358,7 @@ void remove_student_from_database(Student **arr, int size, int index) {
         arr[i] = arr[i+1];
         arr[i+1] = temp[i];
     }
+    free(arr[index]);
     size--;
 }
 /// @brief asks user about criteria of finding students
@@ -450,6 +450,29 @@ void create_new_database_from_found_students(Student **arr, const int size, bool
         
     }
 }
+Student ** editing_database(bool recursion, int *new_size) {
+    if(!recursion) { 
+    system("nano Students.txt");
+    FILE *file = fopen(FILENAME, "r");
+    if(!file) {
+        fprintf(stderr, RED"Error occured while opening a file"RESET);
+    }
+}
+    puts("Have you finished editing the file? (y/n)");
+    char res;
+    scanf("%c", &res);
+    while(getchar() != '\n');
+    if(res != 'y' && res != 'n') {
+        fprintf(stderr, RED"Invalid choice, please try again\n"RESET);
+        return editing_database(true, new_size);
+    }
+    for(;;) {
+        if(res == 'y') break;
+        scanf("%c", &res);
+        while(getchar() != '\n');
+    }
+    return LoadFromFile(new_size);
+}
 int main() {
     puts(BLUE"Welcome to Students database!"RESET);
     for(;;) {
@@ -534,7 +557,12 @@ case 2: {
         create_new_database_from_found_students(arr, size, is_sorted_by_name_ascending(arr, size));
         break;
     }
-    case 5: {
+    case 5 : {
+        int new_size = 0;
+        arr = editing_database(false, &new_size);
+        print_students(arr, new_size);
+    }
+    case 6: {
         break;
     }
 }
