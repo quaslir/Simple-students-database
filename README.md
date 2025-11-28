@@ -1,9 +1,9 @@
-📚 Student Database (C Project)
+### 📚 Student Database (C Project)
 
 This small project creates a simple student database with three fields:
 name, age, and grade.
 
-🚀 How to Run
+### 🚀 How to Run
 
 After cloning the repository, compile and run the program:
 
@@ -64,3 +64,4 @@ Find a group of students by specific parameters (e.g., same age or same grade)
 🎉 Enjoy the Project!
 
 A simple but practical demonstration of working with files, structs, and basic database logic in C.
+
